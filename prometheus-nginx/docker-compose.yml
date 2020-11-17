@@ -1,0 +1,47 @@
+version: '3.3'
+services:
+  prometheus:
+    image: 'prom/prometheus:latest'
+    restart: always
+    hostname: 'prometheus'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - '9090:9090'
+    volumes:
+      - './prometheus-nginx/srv/config/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus-nginx/srv/config/prometheus-rules.yml:/etc/prometheus/prometheus.rules.yml'
+    links:
+      - nginx-vts-exporter
+  nginx-vts-exporter:
+    image: 'sophos/nginx-vts-exporter:latest'
+    restart: always
+    ports:
+      - 9913:9913
+    environment:
+      NGINX_HOST: nginx
+      NGINX_STATUS: "http://nginx/status/format/json"
+    links:
+      - nginx
+
+  nginx:
+    build:
+      context: ./prometheus-nginx/nginx
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./prometheus-nginx/nginx/index.html:/etc/nginx/html/index.html
+      - ./prometheus-nginx/nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  alertmanager:
+    image: prom/alertmanager:v0.15.2
+    restart: always
+    volumes:
+      - ./srv/alertmanager/alertmanager.yml:/alertmanager.yml
+    command:
+      - '--config.file=/alertmanager.yml'
+      - '--web.external-url=http://localhost:9093/'
+    ports:
+      - '9093:9093'

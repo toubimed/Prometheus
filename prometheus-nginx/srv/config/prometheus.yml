@@ -1,0 +1,29 @@
+
+global:
+  scrape_interval:     5s
+  evaluation_interval: 10s
+
+# Alert configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+       - alertmanager:9093
+
+# Rules configuration
+rule_files:
+   - "/etc/prometheus/prometheus.rules.yml"
+
+# Scrape configuration
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  - job_name: 'nginx'
+    honor_labels: true
+    static_configs:
+      - targets: ['nginx-vts-exporter:9913']
+        labels:
+          environment: 'production'

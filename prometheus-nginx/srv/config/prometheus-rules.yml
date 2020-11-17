@@ -1,0 +1,11 @@
+groups:
+  - name: nginx
+    rules:
+    - alert: nginx_high_load
+      expr: sum(rate(nginx_server_requests{server_zone!="*", server_zone!="_",environment="production", code="total"}[2m])) by (code) > 0.02
+      for: 2s
+      labels:
+        severity: critical
+        service: nginx
+      annotations:
+        summary: "nginx is down"
